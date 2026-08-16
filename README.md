@@ -17,6 +17,7 @@
 - 支持关键词搜索、按更新时间 / 名称排序、按项目筛选；
 - 一键「恢复」会话（立即回到正常会话列表）；
 - 「删除」单个会话、「删除此项目全部归档」或「清空全部归档」，均带二次确认；
+- 页面底部仅在存在未分组会话时显示批量归档操作栏，归档前二次确认；
 - 删除失败（运行中 / 日志损坏 / 存储故障）逐条列出原因，其余会话不受影响；
 - 文案跟随 DSH 语言设置，中英文切换无需刷新。
 
@@ -38,6 +39,7 @@ dsh plugin --profile web add <path-to-this-checkout>
 | `/archive-manager/delete` | `POST` | 永久删除一个归档会话 |
 | `/archive-manager/delete-project` | `POST` | 删除一个项目的全部归档会话（`confirm: true`） |
 | `/archive-manager/delete-all` | `POST` | 清空全部归档会话（`confirm: true`） |
+| `/archive-manager/archive-ungrouped` | `POST` | 归档当前“未分组”分组中的会话（`sessionIds` + `confirm: true`） |
 
 批量删除响应：`{ archived, deleted, failed: [{ id, error }], warnings: [...] }` —— 已删计数、逐条失败列表、记账性警告一并在一次响应中返回。
 

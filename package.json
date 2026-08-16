@@ -20,7 +20,8 @@
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-slots"
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-primitives"
       ],
       "platform": "web"
     }
@@ -52,6 +53,7 @@
     "react": "^18.2.0",
     "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6",
     "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.6",
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.0-rc.6",
     "@deepseek-ai/cordis": "^4.0.1"
   }
 }
