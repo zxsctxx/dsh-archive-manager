@@ -40,6 +40,8 @@ dsh plugin --profile web add <path-to-this-checkout>
 | `/archive-manager/delete-project` | `POST` | 删除一个项目的全部归档会话（`confirm: true`） |
 | `/archive-manager/delete-all` | `POST` | 清空全部归档会话（`confirm: true`） |
 | `/archive-manager/archive-ungrouped` | `POST` | 归档当前“未分组”分组中的会话（`sessionIds` + `confirm: true`） |
+| `/archive-manager/inspect` | `POST` | 检查归档会话日志健康状态（`sessionIds`），区分正常 / 损坏 / 记录缺失 |
+| `/archive-manager/force-delete` | `POST` | 强制删除日志损坏或缺失的归档会话（`sessionIds` + `confirm: true`），跳过日志解析 |
 
 批量删除响应：`{ archived, deleted, failed: [{ id, error }], warnings: [...] }` —— 已删计数、逐条失败列表、记账性警告一并在一次响应中返回。
 
@@ -55,6 +57,15 @@ dsh plugin --profile web add <path-to-this-checkout>
 - JSONL：内容寻址附件由 DSH 独立管理，不随会话记录删除。
 - SQLite：直接从后端配置的数据库路径打开并以事务删除；事件行先于会话行删除，不依赖外键开关。
 - 其他持久化后端不提供删除能力时，返回明确的「不支持」错误而非静默失败。
+
+## 损坏会话强制删除
+
+- 页面会对每个归档会话调用 `/archive-manager/inspect` 做健康检查；
+- 日志损坏或记录缺失的会话显示红色状态徽章，删除按钮变为「强制删除」；
+- 强制删除跳过日志解析与序号校验，直接移除存储（JSONL 会话目录 / SQLite 行）、清
+
+理归档记录与工作区关联；
+- 损坏会话的「恢复」仍保持禁用，避免把坏日志重新带回会话列表。
 
 ## 目录
 
