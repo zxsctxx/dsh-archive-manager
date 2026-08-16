@@ -1,6 +1,6 @@
 {
   "name": "dsh-archive-manager",
-  "description": "Archived-session panel with unarchive and permanent delete for the DeepSeek Harness web GUI (JSONL + SQLite persistence backends)",
+  "description": "Archived-session panel with unarchive and permanent delete for the DeepSeek Harness web GUI (JSONL persistence backend)",
   "version": "0.1.0",
   "type": "module",
   "main": "lib/index.js",
@@ -42,9 +42,22 @@
     "session"
   ],
   "license": "MIT",
+  "author": {
+    "name": "zxsctxx",
+    "url": "https://github.com/zxsctxx"
+  },
   "repository": {
     "type": "git",
-    "url": "git@github.com:zxsctxx/dsh-archive-manager.git"
+    "url": "git+https://github.com/zxsctxx/dsh-archive-manager.git"
+  },
+  "homepage": "https://github.com/zxsctxx/dsh-archive-manager#readme",
+  "bugs": {
+    "url": "https://github.com/zxsctxx/dsh-archive-manager/issues"
+  },
+  "packageManager": "pnpm@10.9.2",
+  "scripts": {
+    "check": "node --check lib/index.js && node --check lib/client.js",
+    "pack:dry": "npm pack --dry-run"
   },
   "engines": {
     "node": ">=22.19"

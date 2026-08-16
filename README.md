@@ -4,7 +4,7 @@
 
 按 [huahai0202/dsh-better-archive](https://github.com/huahai0202/dsh-better-archive) 的架构实现（Host HTTP 路由 + `settings.section` 设置页模式），并在此基础上补强：
 
-- **双持久化后端**：JSONL（默认）与 SQLite（`dsh-session-persistence-sqlite`）都能永久删除；
+- **JSONL 持久化删除**：DSH 官方默认 JSONL 后端（每会话一个目录）可永久删除；其他后端返回明确的「不支持」错误；
 - **批量删除健壮性**：逐会话失败隔离，坏日志 / 运行中的会话不会阻塞整批操作，并逐条回报失败原因；
 - **运行中会话保护**：删除请求遇到正在运行的会话时明确拒绝（不再强行拆解 Agent）；
 - **路由独立命名空间**：使用 `/archive-manager/*`，与上游 `dsh-better-archive` 的 `/archived/*` 互不冲突。
@@ -23,20 +23,30 @@
 
 ## 安装
 
-需要 Node.js 22.19+ 和 pnpm。
+需要 [DSH](https://github.com/deepseek-ai/deepseek-harness)（Node.js 22.19+ 与 pnpm）与 `dsh` CLI。
 
 ```sh
 dsh plugin --profile web add <path-to-this-checkout>
 ```
 
-安装完成后重启 `dsh web`。插件会自动加入该 profile 的 `dsh.profile.bundles`；若未自动加入，请在该数组中添加 `"dsh-archive-manager"`，然后重启 DSH Web。
+安装完成后重启 `dsh web`（客户端 bundle 有缓存，修改后也需重启加载）。
+
+从源码运行：
+
+```sh
+pnpm install        # 安装依赖
+dsh plugin --profile web add .   # 或使用本仓库路径
+dsh web
+```
+
+> DSH 插件依赖声明见 `package.json` 的 `peerDependencies`（`@deepseek-ai/dsh-client-*` 0.1.0-rc.6 系列、react 18 与 cordis 4）；其他 DSH 版本可能不兼容。
 
 ## 开发接口
 
 | 路由 | 方法 | 用途 |
 | --- | --- | --- |
-| `/archive-manager/unarchive` | `POST` | 取消归档一个会话 |
-| `/archive-manager/delete` | `POST` | 永久删除一个归档会话 |
+| `/archive-manager/unarchive` | `POST` | 取消归档一个会话（`confirm: true`） |
+| `/archive-manager/delete` | `POST` | 永久删除一个归档会话（`confirm: true`） |
 | `/archive-manager/delete-project` | `POST` | 删除一个项目的全部归档会话（`confirm: true`） |
 | `/archive-manager/delete-all` | `POST` | 清空全部归档会话（`confirm: true`） |
 | `/archive-manager/archive-ungrouped` | `POST` | 归档当前“未分组”分组中的会话（`sessionIds` + `confirm: true`） |
@@ -47,24 +57,22 @@ dsh plugin --profile web add <path-to-this-checkout>
 
 ## 删除行为与后端支持
 
-永久删除只作用于已归档会话。针对两种持久化后端分派：
+永久删除只作用于已归档会话。当前支持 DSH 官方 JSONL 持久化后端：
 
-| 后端 | 存储 | 删除方式 |
-| --- | --- | --- |
-| JSONL（默认） | 每会话一个目录 | 删除该会话专属目录 |
-| SQLite | 单库文件（`sessions` + `events` 表） | 在库文件中删除该会话及其事件行 |
+- JSONL（默认，每会话一个目录）：删除该会话专属目录；内容寻址附件由 DSH 独立管理，不随会话记录删除。
+- 其他持久化后端（如 SQLite 变体）在官方提供可验证的删除能力前，一律返回明确「不支持」错误而非猜测存储布局。
 
-- JSONL：内容寻址附件由 DSH 独立管理，不随会话记录删除。
-- SQLite：直接从后端配置的数据库路径打开并以事务删除；事件行先于会话行删除，不依赖外键开关。
-- 其他持久化后端不提供删除能力时，返回明确的「不支持」错误而非静默失败。
+## 请求安全
+
+- 所有 `/archive-manager/*` 路由要求 `POST` + `Content-Type: application/json`（无 JS 预检的简单请求无法触发）；
+- 所有破坏性路由（含 `unarchive` / `delete`）要求 `confirm: true`；
+- 同源校验：请求 `Origin`（无则回退 `Referer`）必须与当前主机一致。
 
 ## 损坏会话强制删除
 
 - 页面会对每个归档会话调用 `/archive-manager/inspect` 做健康检查；
 - 日志损坏或记录缺失的会话显示红色状态徽章，删除按钮变为「强制删除」；
-- 强制删除跳过日志解析与序号校验，直接移除存储（JSONL 会话目录 / SQLite 行）、清
-
-理归档记录与工作区关联；
+- 强制删除跳过日志解析与序号校验，直接移除存储（JSONL 会话目录），并清理归档记录与工作区关联；
 - 损坏会话的「恢复」仍保持禁用，避免把坏日志重新带回会话列表。
 
 ## 目录

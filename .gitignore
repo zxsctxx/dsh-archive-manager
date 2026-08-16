@@ -1,3 +1,11 @@
 node_modules/
 *.log
+*.tgz
+.env
+.env.*
 .DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
+dist/
